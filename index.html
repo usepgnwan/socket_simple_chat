@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <!-- <script type='module' src="public/index.js"></script> -->
+    <!-- <script type="module">
+        import * as $ from ' https://code.jquery.com/jquery-3.4.1.slim.min.js';
+    </script> -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+</head>
+
+<style>
+    .hide-content {
+        display: none;
+    }
+</style>
+
+<body>
+
+    <div class="room-chat">
+        <form action="">
+            <input type="text" name="roomid" placeholder="roomid">
+            <input type="text" name="username" placeholder="username">
+            <button type="submit"> login</button>
+        </form>
+    </div>
+
+    <div class="chating hide-content" style="background-color: aqua;">
+        <input type="text" id="message" placeholder="message here">
+        <button type="button" class="btn btn-primary" id="submit">kirim chat</button>
+        <button type="button" class="btn btn-primary" id="logout">Logout</button>
+    </div>
+    <div>
+        <h1>User Online</h1>
+        <div class="online_user">
+        </div>
+    </div>
+    <div id="chat"></div>
+
+    <!-- <script src="/socket.io/socket.io.js" charset="utf-8"></script> -->
+    <script src="public/socket.io/dist/socket.io.js"></script>
+    <script type="text/javascript">
+        var io = io("http://localhost:3000/", {
+            transports: ['websocket', 'polling', 'flashsocket'],
+            upgrade: false
+        });
+        let roomid = '';
+        let username = '';
+
+        io.on('updateUserActive', function(data) {
+            console.log(data);
+            $('.online_user').html('');
+            let x = "<ol>";
+            $.each(data, (i, v) => {
+                x += `<li>${v.username}</li>`;
+            });
+            x += "<ol>";
+            $('.online_user').append(x);
+        });
+
+        // login roomid chat 
+        $('.room-chat form').submit(function(e) {
+            e.preventDefault();
+            roomid = $('[name="roomid"]').val();
+            username = $('[name="username"]').val();
+            if (roomid != '' && username != '') {
+                let data = {
+                    roomid,
+                    username
+                };
+                console.log(data);
+                // join room chat with username
+                io.emit('JoinSocket', {
+                    roomid,
+                    username
+                });
+                $('.room-chat').addClass('hide-content');
+                $('.chating').removeClass('hide-content');
+                $("#roomid").val(roomid);
+            } else {
+                alert('form jgn kosong')
+            }
+        });
+
+        // respond login socket 
+        io.on('newActiveUser', function(data) {
+            console.log('new active ' + data.username);
+            alert('USER ' + data.username + ' LOGIN ');
+        });
+
+        io.on('message', function(data) {
+            if (roomid == data.roomId) {
+                $("#chat").append('<span style="color:red">' + data.username + '</span> : ' + data.message + '<br>');
+            }
+        });
+
+        $("#submit").click(function() {
+            io.emit('chat', {
+                roomId: roomid,
+                message: $("#message").val(),
+                username: username,
+            });
+            $("#message").val('');
+        });
+
+        $("#logout").click(function() {
+            io.emit('logout', {
+                roomid: roomid,
+                username: username,
+            });
+            $('.room-chat form')[0].reset();
+            $('.room-chat').removeClass('hide-content');
+            $('.chating').addClass('hide-content');
+            $('.online_user').html('');
+            location.reload();
+        });
+    </script>
+</body>
+
+</html>

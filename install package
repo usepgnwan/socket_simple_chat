@@ -1,0 +1,17 @@
+npm i express
+npm i socket.io
+npm i path
+npm i body-parser
+npm i loadash
+
+npm install express mongoose cors
+npm install -–save-dev nodemon
+Selanjutnya, tambahkan kode berikut pada file “package.json”:
+1
+
+use module for import export es 6	
+"type": "module",
+
+npm i sha1
+using bodi parser
+npm i body-parser
